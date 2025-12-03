@@ -5,17 +5,19 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
     const [isLogin, setIsLogin] = useState(true);
-    const [formData, setFormData] = useState({ username: '', password: '', email: '' });
+    const [formData, setFormData] = useState({
+        username: '',
+        password: '',
+        email: '',
+        admin: false,          // <- akar-e admin lenni
+        adminPassword: ''      // <- admin jelszó (ha admin fiókot kér)
+    });
     const [error, setError] = useState('');
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-
-        // --- REGISZTRÁCIÓ ---
-
-
 
         if (!isLogin) {
             try {
@@ -28,6 +30,8 @@ export default function LoginPage() {
                 if (res.ok) {
                     alert('Sikeres regisztráció! Most jelentkezz be.');
                     setIsLogin(true);
+                    // opcionálisan üríthetjük a formot:
+                    // setFormData({ username: '', password: '', email: '', admin: false, adminPassword: '' });
                 } else {
                     const text = await res.text();
                     setError(text || 'Hiba történt a regisztrációnál.');
@@ -37,21 +41,10 @@ export default function LoginPage() {
             }
         }
 
-
-
-        // ---    BEJELENTKEZÉS   ---
-
-
-
         else {
             const authHeader = 'Basic ' + btoa(`${formData.username}:${formData.password}`);
 
             try {
-
-
-                // Teszt hívás a backendre
-
-
                 const res = await fetch('http://localhost:8080/api/phones', {
                     headers: { 'Authorization': authHeader }
                 });
@@ -86,7 +79,7 @@ export default function LoginPage() {
                             required
                             className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
                             value={formData.username}
-                            onChange={e => setFormData({...formData, username: e.target.value})}
+                            onChange={e => setFormData({ ...formData, username: e.target.value })}
                         />
                     </div>
 
@@ -98,7 +91,7 @@ export default function LoginPage() {
                                 required
                                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
                                 value={formData.email}
-                                onChange={e => setFormData({...formData, email: e.target.value})}
+                                onChange={e => setFormData({ ...formData, email: e.target.value })}
                             />
                         </div>
                     )}
@@ -110,16 +103,58 @@ export default function LoginPage() {
                             required
                             className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
                             value={formData.password}
-                            onChange={e => setFormData({...formData, password: e.target.value})}
+                            onChange={e => setFormData({ ...formData, password: e.target.value })}
                         />
                     </div>
 
-                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
+                    {!isLogin && (
+                        <>
+                            <div className="flex items-center gap-2 mt-2">
+                                <input
+                                    id="admin-checkbox"
+                                    type="checkbox"
+                                    checked={formData.admin}
+                                    onChange={e => setFormData({ ...formData, admin: e.target.checked })}
+                                    className="h-4 w-4"
+                                />
+                                <label htmlFor="admin-checkbox" className="text-sm text-gray-700">
+                                    Admin fiókot szeretnék létrehozni
+                                </label>
+                            </div>
+
+                            {formData.admin && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Admin jelszó</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
+                                        value={formData.adminPassword}
+                                        onChange={e => setFormData({ ...formData, adminPassword: e.target.value })}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Csak akkor töltsd ki, ha tényleg admin jogosultságot szeretnél.
+                                    </p>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
+                    >
                         {isLogin ? 'Belépés' : 'Regisztráció'}
                     </button>
                 </form>
 
-                <p className="text-center mt-4 text-gray-600 cursor-pointer hover:underline" onClick={() => setIsLogin(!isLogin)}>
+                <p
+                    className="text-center mt-4 text-gray-600 cursor-pointer hover:underline"
+                    onClick={() => {
+                        setIsLogin(!isLogin);
+                        setError('');
+                    }}
+                >
                     {isLogin ? 'Nincs még fiókod? Regisztrálj!' : 'Már van fiókod? Belépés.'}
                 </p>
             </div>

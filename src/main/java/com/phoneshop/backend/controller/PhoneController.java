@@ -1,5 +1,6 @@
 package com.phoneshop.backend.controller;
 
+import com.phoneshop.backend.dto.PhoneResponse;
 import com.phoneshop.backend.model.Phone;
 import com.phoneshop.backend.service.PhoneService;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +19,8 @@ public class PhoneController {
 
     private final PhoneService phoneService;
 
-    // MÓDOSÍTVA: Most már itt is elkérjük az Authentication-t
     @GetMapping
-    public ResponseEntity<List<Phone>> getAllPhones(Authentication authentication) {
+    public ResponseEntity<List<PhoneResponse>> getAllPhones(Authentication authentication) {
         // Átadjuk a nevet a service-nek, ő majd eldönti mit láthat
         return ResponseEntity.ok(phoneService.getAllPhones(authentication.getName()));
     }

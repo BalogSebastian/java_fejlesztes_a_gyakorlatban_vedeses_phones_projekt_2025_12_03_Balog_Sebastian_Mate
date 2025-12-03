@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 
 // Ez a sor engedélyezi a kommunikációt a frontenddel (3010)
-
 @CrossOrigin(origins = "http://localhost:3010", allowCredentials = "true")
 public class AuthController {
 
@@ -27,8 +26,6 @@ public class AuthController {
      * @param authentication a Spring Security által biztosított hitelesítési objektum.
      * @return a felhasználó adatai.
      */
-
-
     @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser(Authentication authentication) {
         User user = userRepository.findByUsername(authentication.getName())
@@ -36,15 +33,12 @@ public class AuthController {
         return ResponseEntity.ok(user);
     }
 
-
     /**
      * Új felhasználó regisztrálása és a szerepkör (Role) kiosztása.
-     * Ha a felhasználónév 'admin', Admin szerepkört kap.
+     * Ha a felhasználó admin fiókot szeretne, meg kell adnia az "admin jelszót".
      * @param request a regisztrációs űrlap adatai.
      * @return sikerüzenet vagy hibaüzenet.
      */
-
-
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -54,13 +48,16 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Hiba: Ezzel az email címmel már regisztráltak!");
         }
 
-        // --- ADMIN LOGIKA: Bárki regisztrálhat, de csak az "admin" nevű kap Admin jogot. ---
-
-
-
-
+        // Alapértelmezett szerepkör: sima USER
         Role role = Role.USER;
-        if (request.getUsername().equalsIgnoreCase("admin")) {
+
+        // Ha adminnak szeretne regisztrálni, ellenőrizzük az admin jelszót
+        if (request.isAdmin()) {
+            // Itt ellenőrizzük a "titkos" admin jelszót.
+            // Most fixen "admin", ahogy kérted.
+            if (!"admin".equals(request.getAdminPassword())) {
+                return ResponseEntity.badRequest().body("Hiba: Hibás admin jelszó!");
+            }
             role = Role.ADMIN;
         }
 

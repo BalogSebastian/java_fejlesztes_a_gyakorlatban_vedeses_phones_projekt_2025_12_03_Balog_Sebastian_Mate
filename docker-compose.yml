@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # --- 1. ADATBÁZIS ---
   postgres-db:
     image: postgres:16-alpine
     container_name: phone_shop_db
@@ -10,21 +7,20 @@ services:
       - POSTGRES_PASSWORD=adminpass
       - POSTGRES_DB=phonedb
     ports:
-      - "5436:5432" # KÍVÜL: 5436, BELÜL: 5432
+      - "5436:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # --- 2. FRONTEND ---
   frontend:
-    build: ./frontend # Itt keresi a fenti Dockerfile-t
+    build: ./frontend
     container_name: phone_shop_frontend
     ports:
-      - "3010:3000" # KÍVÜL: 3010, BELÜL: 3000
+      - "3010:3000"
     volumes:
-      - ./frontend:/app # Szinkronizálja a fájlokat (Hot Reload)
-      - /app/node_modules # A konténer saját moduljait védi
+      - ./frontend:/app
+      - /app/node_modules
     environment:
-      - WATCHPACK_POLLING=true # Windows kompatibilitás
+      - WATCHPACK_POLLING=true
 
 volumes:
   postgres_data:

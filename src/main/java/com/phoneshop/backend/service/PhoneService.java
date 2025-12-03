@@ -1,5 +1,6 @@
 package com.phoneshop.backend.service;
 
+import com.phoneshop.backend.dto.PhoneResponse;
 import com.phoneshop.backend.model.Phone;
 import com.phoneshop.backend.model.Role;
 import com.phoneshop.backend.model.User;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,20 +20,42 @@ public class PhoneService {
     private final PhoneRepository phoneRepository;
     private final UserRepository userRepository;
 
-    // --- MÓDOSÍTOTT LOGIKA ---
-    // Most már kell neki a username, hogy tudja, kinek a listáját adja vissza
-    public List<Phone> getAllPhones(String username) {
+    // MOST MÁR DTO-T ADUNK VISSZA
+    // ADMIN: minden hirdetés + hirdető neve
+    // USER: csak a saját hirdetései
+    public List<PhoneResponse> getAllPhones(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User nem található"));
 
-        // HA ADMIN: Mindent lát
-        if (user.getRole() == Role.ADMIN) {
-            return phoneRepository.findAll();
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+
+        List<Phone> phones;
+        if (isAdmin) {
+            // HA ADMIN: Mindent lát
+            phones = phoneRepository.findAll();
+        } else {
+            // HA USER: Csak a sajátját látja
+            phones = phoneRepository.findAllByUserId(user.getId());
         }
-        // HA USER: Csak a sajátját látja
-        else {
-            return phoneRepository.findAllByUserId(user.getId());
-        }
+
+        // Entitás → DTO
+        return phones.stream()
+                .map(phone -> mapToResponse(phone, isAdmin))
+                .collect(Collectors.toList());
+    }
+
+    private PhoneResponse mapToResponse(Phone phone, boolean isAdmin) {
+        return PhoneResponse.builder()
+                .id(phone.getId())
+                .brand(phone.getBrand())
+                .model(phone.getModel())
+                .description(phone.getDescription())
+                .price(phone.getPrice())
+                .imageUrl(phone.getImageUrl())
+                // Hirdető neve: csak ADMIN esetén töltjük,
+                // de biztonsági szempontból amúgy se lát más hirdetését a sima user
+                .ownerUsername(isAdmin ? phone.getUser().getUsername() : null)
+                .build();
     }
 
     public Phone getPhoneById(Long id) {
@@ -51,7 +75,6 @@ public class PhoneService {
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User nem található"));
 
-        // Jogosultság ellenőrzés
         if (!existingPhone.getUser().getId().equals(currentUser.getId()) && currentUser.getRole() != Role.ADMIN) {
             throw new RuntimeException("Nincs jogosultságod módosítani ezt a hirdetést!");
         }
@@ -70,7 +93,6 @@ public class PhoneService {
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User nem található"));
 
-        // Jogosultság ellenőrzés
         if (!existingPhone.getUser().getId().equals(currentUser.getId()) && currentUser.getRole() != Role.ADMIN) {
             throw new RuntimeException("Nincs jogosultságod törölni ezt a hirdetést!");
         }

@@ -11,7 +11,6 @@ export default function Dashboard() {
     const router = useRouter();
     const [phones, setPhones] = useState<Phone[]>([]);
 
-    // Itt most már a teljes User objektumot tároljuk, nem csak a nevet
 
     const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -28,7 +27,6 @@ export default function Dashboard() {
         fetchPhones(auth);
     }, []);
 
-    // 1. Lekérjük a User adatait (Role, Név)
 
 
     const fetchUserInfo = async (auth: string) => {
@@ -51,7 +49,6 @@ export default function Dashboard() {
         }
     };
 
-    // 2. Lekérjük a telefonokat (A backend most már szűr!)
 
 
 

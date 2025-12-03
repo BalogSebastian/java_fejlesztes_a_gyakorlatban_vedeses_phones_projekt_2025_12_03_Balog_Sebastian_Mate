@@ -12,5 +12,8 @@ export interface Phone {
     description: string;
     price: number;
     imageUrl: string;
+
     user?: User;
+
+    ownerUsername?: string;
 }
